@@ -537,13 +537,17 @@ public class CoreBluetoothManager: NSObject, CoreBluetoothManagerProtocol, Obser
             // 2. A download is currently in progress (will cause race conditions)
             // 3. A connection attempt is already in progress
             if !self.isDisconnecting && !self.isRetrievingLogs && !self.isConnecting {
-                // Attempt to reconnect if this was a stored device
+                // Attempt to reconnect if this was a stored device.
+                // openBLEDevice is a blocking C call — dispatch off
+                // the main thread to avoid hanging the UI.
                 if let storedDevice = DeviceStorage.shared.getStoredDevice(uuid: peripheral.identifier.uuidString) {
                     logInfo("Attempting to reconnect to stored device")
-                    _ = DeviceConfiguration.openBLEDevice(
-                        name: storedDevice.name,
-                        deviceAddress: storedDevice.uuid
-                    )
+                    DispatchQueue.global(qos: .userInitiated).async {
+                        _ = DeviceConfiguration.openBLEDevice(
+                            name: storedDevice.name,
+                            deviceAddress: storedDevice.uuid
+                        )
+                    }
                 }
             } else if self.isRetrievingLogs {
                 logWarning("⚠️ Disconnected during download - NOT auto-reconnecting to avoid race condition")
