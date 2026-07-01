@@ -342,7 +342,16 @@ public class GenericParser {
                 
             case DC_SAMPLE_GASMIX:
                 wrapper.data.gasmix = Int(value.gasmix)
-                
+
+            case DC_SAMPLE_LOCATION:
+                if wrapper.data.location == nil {
+                    wrapper.data.location = DiveData.Location(
+                        latitude: value.location.latitude,
+                        longitude: value.location.longitude,
+                        altitude: value.location.altitude
+                    )
+                }
+
             default:
                 break
             }
@@ -422,15 +431,6 @@ public class GenericParser {
 
         if let tempSurf: Double = getField(parser, type: DC_FIELD_TEMPERATURE_SURFACE) {
             wrapper.data.tempSurface = tempSurf
-        }
-
-        // Get location if available
-        if let location: dc_location_t = getField(parser, type: DC_FIELD_LOCATION) {
-            wrapper.data.location = DiveData.Location(
-                latitude: location.latitude,
-                longitude: location.longitude,
-                altitude: location.altitude
-            )
         }
 
         // Create date from components
