@@ -659,11 +659,22 @@ dc_status_t open_ble_device_with_identification(device_data_t **out_data,
         }
     }
     
-    // Fall back to identification if stored config failed or wasn't provided
+    // Fall back to identification if stored config failed or wasn't provided.
     rc = get_device_info_from_name(name, &family, &model);
     if (rc != DC_STATUS_SUCCESS) {
         free(data);
         return rc;
+    }
+    
+    // Skip the fallback attempt if it would just repeat the exact same
+    // configuration already tried above (e.g. a new device auto-detected
+    // from its name has no distinct stored config to fall back from).
+    // Retrying an identical configuration only burns another full
+    // connection-timeout window instead of giving the device more time
+    // on a single attempt.
+    if (stored_family == family && stored_model == model) {
+        free(data);
+        return DC_STATUS_IO;
     }
     
     rc = open_ble_device(data, address, family, model);
