@@ -261,12 +261,16 @@ public class DiveLogRetriever {
                 
                 let contextPtr = UnsafeMutableRawPointer(Unmanaged.passRetained(context).toOpaque())
                 
-                let progressTimer = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { _ in
-                    if devicePtr.pointee.have_progress != 0 {
-                        onProgress?(Int(devicePtr.pointee.progress.current), Int(devicePtr.pointee.progress.maximum))
-                    }
-                }
-                
+                let progressQueue = DispatchQueue(label: "com.libdcswift.progress")
+                   let progressTimer = DispatchSource.makeTimerSource(queue: progressQueue)
+                   progressTimer.schedule(deadline: .now() + 0.25, repeating: 0.25)
+                   progressTimer.setEventHandler {
+                       if devicePtr.pointee.have_progress != 0 {
+                           onProgress?(Int(devicePtr.pointee.progress.current), Int(devicePtr.pointee.progress.maximum))
+                       }
+                   }
+                   progressTimer.resume()                
+
                 devicePtr.pointee.fingerprint_context = Unmanaged.passUnretained(viewModel).toOpaque()
                 devicePtr.pointee.lookup_fingerprint = fingerprintLookup
                 
@@ -290,8 +294,8 @@ public class DiveLogRetriever {
                     logError("❌ Download failed: DC_STATUS_\(errorName)")
                 }
 
-                progressTimer.invalidate()
-
+                progressTimer.cancel()
+                
                 DispatchQueue.main.async {
                     // Determine the outcome of the download
                     let downloadSucceeded: Bool
