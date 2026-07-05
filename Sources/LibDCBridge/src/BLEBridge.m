@@ -38,7 +38,7 @@ bool connectToBLEDevice(ble_object_t *io, const char *deviceAddress) {
     }
     
     // Wait for connection to complete by checking peripheral ready state
-    NSDate *timeout = [NSDate dateWithTimeIntervalSinceNow:10.0]; // 10 second timeout
+    NSDate *timeout = [NSDate dateWithTimeIntervalSinceNow:20.0]; // 20 second timeout (increased from 10s: some devices, e.g. Shearwater Teric, take ~10s to establish the connection, leaving no margin)
     while ([[NSDate date] compare:timeout] == NSOrderedAscending) {
         // Check if peripheral is ready using protocol method
         if ([manager getPeripheralReadyState]) {
