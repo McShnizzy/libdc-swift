@@ -639,6 +639,13 @@ char* get_formatted_device_name(const char *name) {
 /*--------------------------------------------------------------------
  * Helper function to open BLE device with stored or identified configuration
  *------------------------------------------------------------------*/
+// ─── Modified by Johannes Disselhoff (McShnizzy) ───────────────────
+// open_ble_device_with_identification(): skip a redundant second
+// identification attempt that repeated the exact same configuration
+// already tried via the stored-config path — this only doubled the
+// connection-timeout wait without giving the device more time.
+// (2026-07-05, 1663783)
+// ─────────────────────────────────────────────────────────────────
 dc_status_t open_ble_device_with_identification(device_data_t **out_data,
     const char *name, const char *address,
     dc_family_t stored_family, unsigned int stored_model)

@@ -2,6 +2,14 @@
 #import <Foundation/Foundation.h>
 #include <libdivecomputer/ble.h>
 
+// ─── Modified by Johannes Disselhoff (McShnizzy) ───────────────────
+// Connection timeout increased from upstream's 10 seconds to 30 seconds.
+// History: 10s → 20s (2026-07-05, 3ae9193) · 20s → 30s (2026-07-05,
+// 24f2b4f) · reverted to isolate a suspected root cause in the
+// consuming app (2026-07-05, c39f0c9) · reinstated at 30s after
+// confirming it was still needed (2026-07-06, 9d3ca15).
+// ─────────────────────────────────────────────────────────────────
+
 static id<CoreBluetoothManagerProtocol> bleManager = nil;
 
 void initializeBLEManager(void) {
