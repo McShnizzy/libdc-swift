@@ -147,11 +147,17 @@ public class DiveLogRetriever {
                 dataSize: Int(size)
             )
             
-            DispatchQueue.main.async {
-                context.viewModel.appendDives([diveData])
-                context.viewModel.updateProgress(count: context.logCount)
-            }
-            
+            // ─── Modified by Johannes Disselhoff (McShnizzy) ───────────────────
+            // appendDives() and updateProgress(count:) already hop to the main
+            // queue themselves. Wrapping them in an extra DispatchQueue.main.async
+            // here delays the actual dives.append() until after the download's
+            // completion block has already run, so the last-delivered dive is
+            // missing when completion reads viewModel.dives (observed with a
+            // Suunto EON Core: only 1 of 2 dives arrived).
+            // ─────────────────────────────────────────────────────────────────
+            context.viewModel.appendDives([diveData])
+            context.viewModel.updateProgress(count: context.logCount)
+
             context.hasNewDives = true
             context.logCount += 1
             return 1  

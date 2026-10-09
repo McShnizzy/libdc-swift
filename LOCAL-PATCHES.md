@@ -1,10 +1,10 @@
 # Local Patches
 
-This fork carries two local modifications relative to upstream
+This fork carries three local modifications relative to upstream
 [deepsealabs/libdc-swift](https://github.com/deepsealabs/libdc-swift),
 made by Johannes Disselhoff (McShnizzy) for use in the Manta Dive Log app.
-Both are grounded in real measurements against a Shearwater Teric, not
-speculative changes. Per-file notices are also present at the modified
+The first two are grounded in real measurements against a Shearwater Teric,
+not speculative changes. Per-file notices are also present at the modified
 locations themselves.
 
 This fork does not automatically track new upstream releases; the
@@ -35,3 +35,16 @@ connection-timeout wait without giving the device more time on a
 single attempt.
 
 - `1663783` (2026-07-05)
+
+## `Sources/LibDCSwift/DiveLogRetriever.swift`
+
+`diveCallback` (success path): call `appendDives()` and
+`updateProgress(count:)` directly instead of wrapping them in an
+extra `DispatchQueue.main.async`. Both methods already hop to the
+main queue themselves; the extra hop delayed the actual
+`dives.append()` until after the download's completion block had
+already run, so the last-delivered dive was missing when completion
+read `viewModel.dives` (observed with a Suunto EON Core: only 1 of 2
+dives arrived).
+
+- `TBD` (2026-10-09)
