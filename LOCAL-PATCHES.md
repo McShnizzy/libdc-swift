@@ -1,6 +1,6 @@
 # Local Patches
 
-This fork carries three local modifications relative to upstream
+This fork carries four local modifications relative to upstream
 [deepsealabs/libdc-swift](https://github.com/deepsealabs/libdc-swift),
 made by Johannes Disselhoff (McShnizzy) for use in the Manta Dive Log app.
 The first two are grounded in real measurements against a Shearwater Teric,
@@ -48,3 +48,14 @@ read `viewModel.dives` (observed with a Suunto EON Core: only 1 of 2
 dives arrived).
 
 - `50ff5dc` (2026-10-09)
+
+`diveCallback` (catch branch) and `retrieveDiveLogs()`: expose how many
+dives on the device could not be parsed, instead of only logging the
+failure and silently returning fewer dives than the device actually
+holds. `CallbackContext` gained `parseFailureCount`, incremented on each
+parse error; `completion` is now `(Bool, Int) -> Void`, the second
+argument being that count. Consuming apps can use this to tell "device
+genuinely has fewer dives" apart from "some dives were silently
+dropped during parsing".
+
+- *(pending commit)*

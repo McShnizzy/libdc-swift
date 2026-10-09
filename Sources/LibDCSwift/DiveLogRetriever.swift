@@ -22,6 +22,10 @@ public class DiveLogRetriever {
         var storedFingerprint: Data?
         var isCompleted: Bool = false
         var fingerprintMatched: Bool = false  // Track if we stopped due to fingerprint match
+        // Modified by Johannes Disselhoff (McShnizzy): count dives whose raw
+        // data could not be parsed, so callers can surface this instead of
+        // silently returning fewer dives than the device actually holds.
+        var parseFailureCount: Int = 0
         
         var detectedFamily: dc_family_t = DC_FAMILY_NULL
         var detectedModel: UInt32 = 0
@@ -163,7 +167,8 @@ public class DiveLogRetriever {
             return 1  
         } catch {
             logError("❌ Failed to parse dive #\(context.logCount): \(error)")
-            return 1 
+            context.parseFailureCount += 1
+            return 1
         }
     }
     
@@ -221,7 +226,11 @@ public class DiveLogRetriever {
             viewModel: DiveDataViewModel,
             bluetoothManager: CoreBluetoothManager,
             onProgress: ((Int, Int) -> Void)? = nil,
-            completion: @escaping (Bool) -> Void
+            // Modified by Johannes Disselhoff (McShnizzy): second parameter
+            // reports how many dives on the device could not be parsed, so
+            // callers can tell "device had fewer dives" apart from "some
+            // dives were silently dropped" instead of only a Bool.
+            completion: @escaping (Bool, Int) -> Void
         ) {
             let retrievalQueue = DispatchQueue(label: "com.libdcswift.retrieval", qos: .userInitiated)
             
@@ -231,7 +240,7 @@ public class DiveLogRetriever {
                 guard let dcDevice = devicePtr.pointee.device else {
                     DispatchQueue.main.async {
                         viewModel.setDetailedError("No device connection found", status: DC_STATUS_IO)
-                        completion(false)
+                        completion(false, 0)
                     }
                     return
                 }
@@ -344,7 +353,7 @@ public class DiveLogRetriever {
                     // Handle the outcome
                     if !downloadSucceeded {
                         viewModel.setDetailedError("Download incomplete - DC_STATUS error code: \(enumStatus)", status: enumStatus)
-                        completion(false)
+                        completion(false, context.parseFailureCount)
                     } else {
                         // Download completed successfully
                         if shouldSaveFingerprint, let lastFP = context.lastFingerprint, let serial = context.deviceSerial {
@@ -368,7 +377,7 @@ public class DiveLogRetriever {
                             viewModel.finalizeDiveNumbering()  // Sort by date and renumber (oldest = #1)
                             viewModel.updateProgress(.completed)
                         }
-                        completion(true)
+                        completion(true, context.parseFailureCount)
                     }
                     
                     context.isCompleted = true
