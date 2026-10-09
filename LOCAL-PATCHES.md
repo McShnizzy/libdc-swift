@@ -47,4 +47,4 @@ already run, so the last-delivered dive was missing when completion
 read `viewModel.dives` (observed with a Suunto EON Core: only 1 of 2
 dives arrived).
 
-- `TBD` (2026-10-09)
+- `50ff5dc` (2026-10-09)
