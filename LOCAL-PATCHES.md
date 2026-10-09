@@ -58,4 +58,4 @@ argument being that count. Consuming apps can use this to tell "device
 genuinely has fewer dives" apart from "some dives were silently
 dropped during parsing".
 
-- *(pending commit)*
+- `208f622` (2026-10-09)
